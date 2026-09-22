@@ -30,7 +30,6 @@ claiming a live CRM connection.
 
 - `backend/` FastAPI, SQLAlchemy/Alembic, PostgreSQL/pgvector, Redis/Celery
 - `frontend/` Next.js and Tailwind dashboard
-- `Doc & prd/` product documentation and planning material
 
 ## Intended workflow
 
