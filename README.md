@@ -7,10 +7,6 @@ CampaignIQ is a modular monolith for grounded, personalized campaign outreach. I
 
 `CampaignIQ auth → HubSpot CRM → website intelligence → campaign generation → review → external email delivery → scheduled follow-ups`
 
-## Product preview
-
-![CampaignIQ sign-in screen](docs/screenshots/sign-in.png)
-
 ## Repository layout
 
 - `backend/` FastAPI, SQLAlchemy/Alembic, PostgreSQL/pgvector, Redis/Celery
