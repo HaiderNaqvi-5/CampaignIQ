@@ -1,0 +1,1 @@
+export default function WebsitesPage() { return <section><h1 className="text-2xl font-semibold">Websites</h1><p className="mt-2 text-slate-500">Manage website intelligence and writing style profiles.</p></section>; }

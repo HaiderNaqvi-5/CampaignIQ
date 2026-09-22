@@ -1,0 +1,97 @@
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: campaigniq-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: campaigniq_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d campaigniq_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - campaigniq-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: campaigniq-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - campaigniq-network
+
+  backend:
+    env_file:
+      - .env
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: campaigniq-backend
+    restart: unless-stopped
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/campaigniq_db
+      - SYNC_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/campaigniq_db
+      - REDIS_URL=redis://redis:6379/0
+      - JWT_SECRET=campaigniq_development_secret_key_change_in_production
+      - FRONTEND_ORIGIN=http://localhost:3000
+    volumes:
+      - ./backend:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - campaigniq-network
+
+  celery_worker:
+    env_file:
+      - .env
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: campaigniq-celery-worker
+    restart: unless-stopped
+    command: celery -A app.jobs.celery_app worker --loglevel=info -c 4
+    environment:
+      - APP_ENV=development
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/campaigniq_db
+      - SYNC_DATABASE_URL=postgresql://postgres:postgres@postgres:5432/campaigniq_db
+      - REDIS_URL=redis://redis:6379/0
+    volumes:
+      - ./backend:/app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - campaigniq-network
+
+volumes:
+  pgdata:
+  redisdata:
+
+networks:
+  campaigniq-network:
+    driver: bridge
