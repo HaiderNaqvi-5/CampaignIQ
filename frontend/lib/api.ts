@@ -3,7 +3,9 @@
  * Automatically attaches the JWT Bearer token from localStorage on every request.
  */
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Browser requests go through Next's same-origin `/api` proxy. The proxy
+// itself receives its upstream URL from NEXT_PUBLIC_API_URL in next.config.js.
+const API_BASE = '';
 
 export async function apiRequest<T>(
   path: string,
